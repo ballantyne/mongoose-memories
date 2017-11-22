@@ -5,6 +5,8 @@ const bson     = require('bson');
 
 var ObjectID   = bson.ObjectID;
 var Middleware = require(path.join(__dirname, 'middleware'));
+// var Class      = require(path.join(__dirname, 'class'));
+
 
 module.exports = klass(function(data) {
 
@@ -50,14 +52,14 @@ module.exports = klass(function(data) {
       next(null, self);
     } else {
       _.each(funcs, function(hook) {
-        Middleware.prototype.event      = evt;
-        Middleware.prototype.timing     = 'pre';
-        Middleware.prototype.middleware = hook;             
+        Middleware.prototype.event      = function() { return evt};
+        Middleware.prototype.timing     = function() { return 'pre'};
+        Middleware.prototype.middleware = hook.fn;             
         var middleware                  = new Middleware(self);
 
         middleware.pre(function() {
           _.extend(self, middleware);
-          if (_.last(funcs).id() == hook.id()) {
+          if (_.last(funcs).id == hook.id) {
             next(null, self);
           }
         })
@@ -72,14 +74,14 @@ module.exports = klass(function(data) {
       next(null, self);
     } else {
       _.each(funcs, function(hook) {
-        Middleware.prototype.event      = evt;
-        Middleware.prototype.timing     = 'post';
-        Middleware.prototype.middleware = hook;             
+        Middleware.prototype.event      = function() { return evt };
+        Middleware.prototype.timing     = function() { return 'post'};
+        Middleware.prototype.middleware = hook.fn;             
         var middleware                  = new Middleware(self);
 
         middleware.post(self, function() {
           _.extend(self, middleware);
-          if (_.last(funcs).id() == hook.id()) {
+          if (_.last(funcs).id == hook.id) {
             next(null, self);
           }
         })
@@ -87,8 +89,23 @@ module.exports = klass(function(data) {
     }
   },
 
-  update: function(next) {
-    this.callbackChain('update', 'replaceRecord', next);
+  update: function(document, next) {
+    var self = this;
+    self.before('update', function(err, doc) {
+      if (document['$set'] != undefined) {
+        var toSet = _.keys(document['$set']);
+        for (i = 0; i < toSet.length; i++) { 
+          self[toSet[i]] = document['$set'][toSet[i]];
+        }
+      } else {
+        _.extend(self, document);
+      }
+      self.replaceRecord(function(err, doc) {
+        self.after('update', function(err, doc) {
+          next(err, doc);
+        });
+      });
+    })	
   },
 
   replaceRecord: function(next) {

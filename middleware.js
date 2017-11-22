@@ -11,7 +11,7 @@ module.exports = klass(function(record) {
   },
 
   post: function() {
-    if (this.event == 'update' && this.timing == 'post') {
+    if (this.event() == 'update' && this.timing() == 'post') {
       this.middleware(null, this, next);
     } else {
       this.middleware(this, next);

@@ -12,21 +12,13 @@ module.exports = klass(function(schema) {
 }).methods({
 
   pre: function(evt, func) {
-    var id = new ObjectID().toString();
-
-    func.prototype.id = function() {
-      return id;
-    }
-    this[evt].pre.push(func)
+    var obj = {id: new ObjectID().toString(), fn: func};
+    this[evt].pre.push(obj);
   },
 
   post: function(evt, func) {
-    var id = new ObjectID().toString();
-
-    func.prototype.id = function() {
-      return id;
-    }
-    this[evt].post.push(func)
+    var obj = {id: new ObjectID().toString(), fn: func};
+    this[evt].post.push(obj);
   }
 
 })

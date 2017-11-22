@@ -5,6 +5,7 @@ const _      = require('underscore');
 var Query    = require(path.join(__dirname, 'query'));
 var Instance = require(path.join(__dirname, 'instance'));
 
+
 module.exports = klass(function(model, obj) {
   this.model      = model;
   
@@ -14,7 +15,6 @@ module.exports = klass(function(model, obj) {
   }
   
   this.stack      = [obj];
-
 }).methods({
 
   where: function(obj) {
@@ -33,22 +33,59 @@ module.exports = klass(function(model, obj) {
   },
   
   collection: function() {
-    return global.memory_database[this.model].collection
+    // console.log('collection', this.model);
+    // console.log(global.memory_database[this.model]);
+    return (global.memory_database[this.model] ? global.memory_database[this.model].collection : [])
   },
 
   createInstances: function(items, next) {
-    Instance.prototype.model = this.model;
-    items = _.map(items, function(i){ return new Instance(i)  });
+    var self = this;
+    items = _.map(items, function(i){ return self.class().new(i)  });
     next(null, items);
   },
 
   findOne: function(next) {
     this.exec(function(err, doc) {
-      next(err, doc[0])
+      if (doc[0] != undefined) {
+        doc = doc[0];
+      } else {
+        doc = null;
+      }
+      next(err, doc);
     }); 
   },
 
-  exec: function(next) {
+  update: function(doc, next) {
+    var self = this;
+
+    this.documentUpdate = doc;
+    if (next) {
+      this.executeUpdate(next);
+    } else {
+      return this;
+    }
+  },
+  
+  executeUpdate: function(next) {
+    var self = this;
+    var newRecords = [];
+    this.executeQuery(function(err, records) {
+      _.each(records, function(record) {
+        record.update(self.documentUpdate, function(err, newRecord) {
+          newRecords.push(newRecord);
+          if (_.last(records).id == record.id) {
+            if (next) {
+              next(null, newRecords);
+            } else {
+              return self;
+            }
+          }
+        })
+      })
+    })
+  },
+
+  executeQuery: function(next) {
     var self  = this;
     var items = this.collection();
     var index = 0;
@@ -68,6 +105,15 @@ module.exports = klass(function(model, obj) {
         }
       })
     })
+  },
+
+
+  exec: function(next) {
+    if (this.documentUpdate != undefined) {
+      this.executeUpdate(next);
+    } else {
+      this.executeQuery(next);
+    }
   }
 })
 

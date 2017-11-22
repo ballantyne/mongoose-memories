@@ -9,5 +9,5 @@ module.exports.Middleware  = require(path.join(__dirname, 'middleware'));
 module.exports.Instance    = require(path.join(__dirname, 'instance'));
 module.exports.Schema      = require(path.join(__dirname, 'schema'));
 module.exports.model       = require(path.join(__dirname, 'model'));
-
+module.exports.object      = require(path.join(__dirname, 'object'));
 

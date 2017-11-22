@@ -8,4 +8,16 @@ const ProfileImage = new Schema({
   username: String
 });
 
-module.exports     = mongoose.model('ProfileImage', ProfileImage, true);
+
+ProfileImage.plugin(function(schema, options) {
+  schema.pre('save', function(next) {
+    this.plugin = JSON.parse(JSON.stringify(this));
+    this.toSave = options.toSave;
+    next();
+
+  })
+
+}, {toSave: 'saved'})
+
+
+module.exports     = mongoose.model('ProfileImageWithPlugin', ProfileImage, true);

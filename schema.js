@@ -8,7 +8,6 @@ var Validators   = require(path.join(__dirname, 'validators'));
 var Hooks        = require(path.join(__dirname, 'hooks'));
 
 module.exports = klass(function(schema, options) {
-  // console.log('schema', schema);
   if (options == undefined) {
     options = { strict: true };
   }
@@ -36,21 +35,13 @@ module.exports = klass(function(schema, options) {
   },
 
   pre: function(evt, func) {
-    var id = new ObjectID().toString();
-
-    func.prototype.id = function() {
-      return id;
-    }
-    this.hooks[evt].pre.push(func)
+    var obj = {id: new ObjectID().toString(), fn: func};
+    this.hooks[evt].pre.push(obj);
   },
 
   post: function(evt, func) {
-    var id = new ObjectID().toString();
-
-    func.prototype.id = function() {
-      return id;
-    }
-    this.hooks[evt].post.push(func)
+    var obj = {id: new ObjectID().toString(), fn: func};
+    this.hooks[evt].post.push(obj);
   }
 
 })
