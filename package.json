@@ -1,0 +1,30 @@
+{
+  "name": "mongoose-memories",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ballantyne/mongoose-memories.git"
+  },
+  "author": "Scott Ballantyne",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ballantyne/mongoose-memories/issues"
+  },
+  "homepage": "https://github.com/ballantyne/mongoose-memories#readme",
+  "dependencies": {
+    "async": "^2.6.0",
+    "bson": "^1.0.4",
+    "joi": "^13.0.2",
+    "klass": "^1.4.1",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1"
+  }
+}
