@@ -10,7 +10,7 @@ module.exports = klass(function(record) {
     this.middleware(next);
   },
 
-  post: function() {
+  post: function(next) {
     if (this.event() == 'update' && this.timing() == 'post') {
       this.middleware(null, this, next);
     } else {
