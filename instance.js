@@ -52,11 +52,12 @@ module.exports = klass(function(data) {
       next(null, self);
     } else {
       _.each(funcs, function(hook) {
-        Middleware.prototype.event      = function() { return evt};
-        Middleware.prototype.timing     = function() { return 'pre'};
-        Middleware.prototype.middleware = hook.fn;             
-        var middleware                  = new Middleware(self);
-
+        var Before = Middleware.extend(function() {}).methods({
+          event: function() { return evt},
+          timing: function() { return 'pre'},
+          beforeSave: hook.fn
+        })
+        var middleware                  = new Before(self);
         middleware.pre(function() {
           _.extend(self, middleware);
           if (_.last(funcs).id == hook.id) {
@@ -74,11 +75,12 @@ module.exports = klass(function(data) {
       next(null, self);
     } else {
       _.each(funcs, function(hook) {
-        Middleware.prototype.event      = function() { return evt };
-        Middleware.prototype.timing     = function() { return 'post'};
-        Middleware.prototype.middleware = hook.fn;             
-        var middleware                  = new Middleware(self);
-
+        var After = Middleware.extend(function() {}).methods({
+          event: function() { return evt},
+          timing: function() { return 'post'},
+          afterSave: hook.fn
+        })
+        var middleware                  = new After(self);
         middleware.post(function() {
           _.extend(self, middleware);
           if (_.last(funcs).id == hook.id) {

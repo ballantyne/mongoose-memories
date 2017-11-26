@@ -7,16 +7,16 @@ module.exports = klass(function(record) {
 
 }).methods({
   pre: function(next) {
-    this.middleware(next);
+    this.beforeSave(next);
   },
 
   post: function(next) {
     if (this.event() == 'update' && this.timing() == 'post') {
-      this.middleware(null, this, next);
+      this.afterSave(null, this, next);
     } else {
-      this.middleware(this, next);
+      this.afterSave(this, next);
     }
   }
-  
+
 });
 
