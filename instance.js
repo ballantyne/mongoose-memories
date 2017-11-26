@@ -91,6 +91,19 @@ module.exports = klass(function(data) {
     }
   },
 
+  enforceSchema:function(obj) {
+    if (this.db().schema.options.strict) {
+      var self = this;
+      var keys = _.keys(obj);
+      console.log(this.db().schema)
+      return _.omit(obj, function(value, key, object) {
+        return self.db().schema.validators.attributes.indexOf(key) == -1;
+      })
+    } else {
+      return obj;
+    }
+  },
+
   update: function(document, next) {
     var self = this;
     self.before('update', function(err, doc) {
@@ -114,11 +127,13 @@ module.exports = klass(function(data) {
     var self = this;
     if (self._id == undefined) {
       self.generateId();
-      self.db().collection.push(self.toObject());     
+      var obj = self.enforceSchema(self);
+      self.db().collection.push(obj);
       next(null, self);
     } else {
       self.removeRecord(function() {
-        self.db().collection.push(self.toObject());
+	var obj = self.enforceSchema(self);
+        self.db().collection.push(obj);
         if (next) {
           next();
         }

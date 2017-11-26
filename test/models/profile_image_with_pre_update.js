@@ -6,7 +6,7 @@ const Schema       = mongoose.Schema;
 const ProfileImage = new Schema({
   user_id: { type: Schema.Types.ObjectId, ref: 'User' },
   username: String
-});
+}, {strict: false});
 
 ProfileImage.pre('update', function(next) {
   this.preupdate = JSON.parse(JSON.stringify(this));
