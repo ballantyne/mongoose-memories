@@ -19,6 +19,7 @@
   "dependencies": {
     "async": "^2.6.0",
     "bson": "^1.0.4",
+    "flat": "^4.0.0",
     "joi": "^13.0.2",
     "klass": "^1.4.1",
     "underscore": "^1.8.3"

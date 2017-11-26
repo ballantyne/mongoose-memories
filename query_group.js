@@ -17,8 +17,13 @@ module.exports = klass(function(model, obj) {
   this.stack      = [obj];
 }).methods({
 
-  where: function(obj) {
-    this.stack.push(obj)
+  ne: function(query) {
+    this.stack.push(query)
+    return this;
+  },  
+
+  where: function(query) {
+    this.stack.push(query);
     return this;
   },  
 
@@ -33,8 +38,6 @@ module.exports = klass(function(model, obj) {
   },
   
   collection: function() {
-    // console.log('collection', this.model);
-    // console.log(global.memory_database[this.model]);
     return (global.memory_database[this.model] ? global.memory_database[this.model].collection : [])
   },
 
@@ -45,9 +48,11 @@ module.exports = klass(function(model, obj) {
   },
 
   findOne: function(next) {
-    this.exec(function(err, doc) {
-      if (doc[0] != undefined) {
-        doc = doc[0];
+    var doc;
+    this.exec(function(err, docs) {
+      // console.log(docs)
+      if (docs[0] != undefined) {
+        doc = docs[0];
       } else {
         doc = null;
       }
@@ -89,8 +94,9 @@ module.exports = klass(function(model, obj) {
     var self  = this;
     var items = this.collection();
     var index = 0;
+    // console.log('stack', this.stack);
     _.each(this.stack, function(options) {
-      var query = new Query(options, items);
+      var query = new Query(options.op, options.query, items);
       query.exec(function(err, response) {
         if (err) {
           next(err);

@@ -2,87 +2,96 @@ const path           = require('path');
 const klass          = require('klass');
 const _              = require('underscore');
 const notImplemented = require(path.join(__dirname, 'not_implemented'));
+var flatten          = require('flat')
 
-module.exports = klass(function(obj, col) {
-  this.query           = obj;
+module.exports = klass(function(op, query, col) {
+  this.op              = op
+  this.query           = query;
   this.collection      = col;
 }).methods({
-  operate: function(key, query, collection) {
-    var self  = this;
-    var value = query[key];
-    var newCollection;
 
-    switch(true) {
-      case (typeof value == 'object'):
-        switch(true) { 
-          case (value instanceof RegExp):
-            newCollection = _.reject(collection, function(i) { return value.test(i[key]) == false })
-            break;
-          default: 
-            var keys = _.keys(value);
-            newCollection = collection;
-            _.each(keys, function(k) {
-              var v = value[k];
-	      newCollection = self[k](key, v, collection);
-            })
-        }
-      case (key.indexOf('.') > -1):
-        newCollection = _.reject(collection, function(i) { 
-          var keys = key.split('.');
-          _.each(keys, function(k) {
-            i = i[k];
-	    if (_.last(keys) == k) {
-	      if (value instanceof RegExp) {
-                return value.test(i) == false;
-              } else {
-                return i[k] != value;
-              }
-            }
-          })
-        })
-        
-        break;
-      default:
-        newCollection = _.reject(collection, function(i) { return i[key] != value })
-    }
-    
-    return newCollection; 
+
+  filter: function(key, value, collection, operator) {
+    var self = this;
+    newCollection = _.reject(collection, function(i) { 
+       i = flatten(i); 
+       var shouldReject = (self.handleValue(i[key], value, operator) == false);
+       return shouldReject;
+    })  
+    return newCollection;
   },
 
 
+  handleValue: function(item, value, operator) {
+    var self = this;
+    if (value instanceof RegExp) {
+      var matches = value.test(item);
+      return self.handleOperator(matches, true, operator)
+    } else {
+      return self.handleOperator(item, value, operator);
+    }
+  },
+
+  handleOperator: function(item, value, operator) {
+    switch(operator) {
+      case 'gt':
+        return item > value;
+        break;
+      case 'lt':
+        return item < value;
+        break;
+      case 'gte':
+        return item >= value;
+        break;
+      case 'lte':
+        return item <= value;
+        break;
+      case 'in':
+        return value.indexOf(item) > -1;
+        break;
+       case 'nin':
+        return  value.indexOf(item) == -1;
+        break;
+      case 'eq':
+        return item == value;
+        break; 
+      case 'ne':
+        return item != value;
+        break;
+    } 
+  },
 
   eq:            function(key, value, collection) {
-    return _.reject(collection, function(i) { return i[key] != value });
+    return this.filter(key, value, collection, 'eq');
   },
 
   gt:            function(key, value, collection) {
-    return _.reject(collection, function(i) { return (i[key] >= value) != false });
+    return  this.filter(key, value, collection, 'gt');
   },
 
   gte:           function(key, value, collection) {
-    return _.reject(collection, function(i) { return (i[key] > value) != false })
+    return  this.filter(key, value, collection, 'gte');
   },
 
   in:            function(key, value, collection) {
-    return _.reject(collection, function(i) { return (value.indexOf(i[key]) > -1) != false })
+    return  this.filter(key, value, collection, 'in');
   },
 
   lt:            function(key, value, collection) {
-    return _.reject(collection, function(i) { return (i[key] <= value) != false });
+    return  this.filter(key, value, collection, 'lt');
   },
 
   lte:           function(key, value, collection) {
-    return _.reject(collection, function(i) { return (i[key] < value) != false });
+    return  this.filter(key, value, collection, 'lte');
   },
 
   ne:            function(key, value, collection) {
-    return _.reject(collection, function(i) { return (i[key] == value) });
+    return  this.filter(key, value, collection, 'ne');
   },
 
   nin:           function(key, value, collection) {
-    notImplemented('nin'); 
-    
-    return collection;
+    return  this.filter(key, value, collection, 'nin');
+   
   },
 
   and:           function(key, value, collection) {
@@ -139,10 +148,8 @@ module.exports = klass(function(obj, col) {
     return collection;
   },
 
-  where:         function(key, value, collection) {
-    var obj = {};
-    obj[key] = value;
-    return _.where(collection, obj);
+  where:            function(key, value, collection) {
+    return this.filter(key, value, collection, 'eq');
   },
 
   geoIntersects: function(key, value, collection) {
@@ -229,34 +236,30 @@ module.exports = klass(function(obj, col) {
     return collection;
   },
   
-  iterateKeys: function(obj, col, next) {
+  iterateKeys: function(c, next) {
     var self = this;
-    var keys = _.keys(obj);
+    // var c = col; 
+    var keys = _.keys(self.query);
     if (keys.length > 0) {
       _.each(keys, function(k) {
-        col = self.operate(k, self.query, col);
-
+        var v = self.query[k];
+        c = self[self.op](k, v, c);
         if (_.last(keys) == k) {
           if (next) {
-            next(null, col);
+            next(null, c);
           } else {
-            return col;
+            return c;
           }
         }
       })
     } else {
-      next(null, col);
+      next(null, c);
     }
-  },
-
-  createInstances: function(items) {
-    Instance.prototype.model = this.model;
-    return _.map(items, function(i){ return new Instance(i)  });
   },
 
   exec: function(next) {
     var self = this;
-    self.iterateKeys(self.query, self.collection, function(err, col) {
+    self.iterateKeys(self.collection, function(err, col) {
       next(null, col);
     })
   }

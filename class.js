@@ -38,9 +38,19 @@ module.exports = klass(function(model) {
     return new ClassQuery(model, options);
   },
 
+  ne: function(options, next) {
+    var query = {op: 'ne', query: options};
+    var q = this.queryGroup(this.model, query);
+    if (next) {
+      q.exec(next);     
+    } else {
+      return q;
+    }
+  },
 
   where: function(options, next) {
-    var q = this.queryGroup(this.model, options);
+    var query = {op: 'where', query: options};
+    var q = this.queryGroup(this.model, query);
     if (next) {
       q.exec(next);     
     } else {
@@ -49,6 +59,7 @@ module.exports = klass(function(model) {
   },
 
   find: function(options, next) {
+    var query = {op: 'where', query: options};
     var q = this.queryGroup(this.model, options);
     if (next) {
       q.exec(next);
@@ -58,12 +69,13 @@ module.exports = klass(function(model) {
   },
   
   findOne: function(options, next) {
-    this.queryGroup(this.model, options).findOne(next); 
+    var query = {op: 'where', query: options};
+    this.queryGroup(this.model, query).findOne(next); 
   },
  
   update: function(query, doc, options, next) {
     if (typeof options == 'function') next = options;
-    
+
     var self = this;
     var newRecords = [];
     this.find(query, function(err, records) {

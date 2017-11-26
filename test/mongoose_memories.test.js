@@ -179,11 +179,22 @@ describe("Mongoose Memories", function() {
             income_data[code] = require(path.join(os.tmpdir(), 'incomeData-'+code+'.json'))[1];
 
             _.each(income_data[code], function(data) {
+              // console.log(data);
               data.longitude = parseFloat(data.longitude);
               data.latitude = parseFloat(data.latitude);
-              IncomeLevel.create(data, function() { 
-                if (_.last(incomeCodes) == code && _.last(income_data[code]).id == data.id) {
-                  done();
+              IncomeLevel.where({id: data.id}).findOne(function(err, doc) {
+                // console.log(doc)
+                if (doc) {
+                  if (_.last(incomeCodes) == code && _.last(income_data[code]).id == data.id) {
+                    done();
+                  }
+                } else {
+                  IncomeLevel.create(data, function(err, doc) {
+                    // console.log(doc);
+                    if (_.last(incomeCodes) == code && _.last(income_data[code]).id == data.id) {
+                      done();
+                    }
+                  });
                 }
               });
             })	
@@ -192,12 +203,50 @@ describe("Mongoose Memories", function() {
       });
     })
 
-    it("where", function(done) {
-      IncomeLevel.where({}).exec(function(err, doc) {
-        // console.log(JSON.stringify(doc));
+    it("where.findOne", function(done) {
+      IncomeLevel.where({iso2Code: 'ID'}).findOne(function(err, doc) {
+        // console.log('findOne', doc)
+        expect(doc.id).to.equal('IDN');
 	done();
       });
     });
+    
+    it("where.findOne multiple attributes", function(done) {
+      IncomeLevel.where({"id": 'IDN', 'adminregion.id': 'EAP'}).findOne(function(err, doc) {
+        // console.log('multiple', doc);
+        expect(doc.id).to.equal('IDN');
+	done();
+      });
+    });
+
+    it("where.exec with non nested attributes ", function(done) {
+      IncomeLevel.where({'id': 'MCO'}).exec(function(err, doc) {
+        // console.log(doc);
+        expect(_.map(doc, function(i) { return i.id}).indexOf('MCO') > -1).to.equal(true);
+	done();
+      });
+    });
+
+    it("where.exec with nested attributes ", function(done) {
+      IncomeLevel.where({'adminregion.id': 'EAP'}).exec(function(err, doc) {
+        // console.log(doc);
+        expect(_.map(doc, function(i) { return i.id}).indexOf('MCO') > - 1).to.equal(false);
+	done();
+      });
+    });
+
+    it("where.exec with nested attributes ", function(done) {
+      IncomeLevel.ne({'adminregion.id': 'EAP'}).exec(function(err, doc) {
+        // console.log(doc);
+        var ids = _.map(doc, function(i) { return [i.id, i.adminregion.id]});
+        // console.log(ids);
+        expect(ids.indexOf('MCO') > -1).to.equal(false);
+	done();
+      });
+    });
+
+
+
   });
 
 
