@@ -79,7 +79,7 @@ module.exports = klass(function(data) {
         Middleware.prototype.middleware = hook.fn;             
         var middleware                  = new Middleware(self);
 
-        middleware.post(self, function() {
+        middleware.post(function() {
           _.extend(self, middleware);
           if (_.last(funcs).id == hook.id) {
             next(null, self);
