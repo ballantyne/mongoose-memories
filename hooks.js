@@ -4,10 +4,9 @@ const bson   = require('bson');
 var ObjectID = bson.ObjectID;
 
 module.exports = klass(function(schema) {
-  var timing        = { pre: [], post: [] };
-  this.save   = _.clone(timing);
-  this.update = _.clone(timing);
-  this.remove = _.clone(timing);
+  this.save   =  { pre: [], post: [] };
+  this.update =  { pre: [], post: [] };
+  this.remove =  { pre: [], post: [] };
 
 }).methods({
 

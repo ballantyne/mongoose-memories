@@ -3,10 +3,10 @@ const klass    = require('klass');
 const _        = require('underscore');
 const bson     = require('bson');
 
+const object   = require(path.join(__dirname, 'object'));
+
 var ObjectID   = bson.ObjectID;
 var Middleware = require(path.join(__dirname, 'middleware'));
-// var Class      = require(path.join(__dirname, 'class'));
-
 
 module.exports = klass(function(data) {
 
@@ -71,6 +71,7 @@ module.exports = klass(function(data) {
   after: function(evt, next) {
     var self  = this;
     var funcs = self.hooks(evt, 'post');
+    
     if (funcs.length == 0) {
       next(null, self);
     } else {
@@ -95,9 +96,11 @@ module.exports = klass(function(data) {
     if (this.db().schema.options.strict) {
       var self = this;
       var keys = _.keys(obj);
-      console.log(this.db().schema)
+      
+      var schemaAttrs =  self.db().schema.validators.attributes;
+
       return _.omit(obj, function(value, key, object) {
-        return self.db().schema.validators.attributes.indexOf(key) == -1;
+        return schemaAttrs.indexOf(key) == -1;
       })
     } else {
       return obj;
@@ -127,15 +130,15 @@ module.exports = klass(function(data) {
     var self = this;
     if (self._id == undefined) {
       self.generateId();
-      var obj = self.enforceSchema(self);
+      var obj = object.attrs(self.enforceSchema(self));
       self.db().collection.push(obj);
       next(null, self);
     } else {
       self.removeRecord(function() {
-	var obj = self.enforceSchema(self);
+	var obj = object.attrs(self.enforceSchema(self));
         self.db().collection.push(obj);
         if (next) {
-          next();
+          next(null, self);
         }
       })
     }
