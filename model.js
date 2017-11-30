@@ -8,7 +8,10 @@ var Hooks = require(path.join(__dirname, 'hooks'));
 var Class = require(path.join(__dirname, 'class'));
 
 module.exports = function(model, schema, reset) {
-
+  var methods = schema.methods;
+  var statics = schema.statics;
+  // delete schema.statics;
+  // delete schema.methods;
   this.establish = function(model, schema) {
     global.memory_database[model]              = {};
     global.memory_database[model].name         = model;
@@ -21,7 +24,10 @@ module.exports = function(model, schema, reset) {
     this.establish(model, schema);
   }
 
-  return new Class(model);
+  var NewClass = Class.extend(function() {}).statics(statics).methods(methods);
+  var c = new NewClass(model);
+
+  return c;
 
 }
 

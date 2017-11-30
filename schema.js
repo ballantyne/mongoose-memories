@@ -15,7 +15,8 @@ module.exports = klass(function(schema, options) {
   this.validators   = new Validators(schema);
   this.attributes   = schema;
   this.options      = options;
-
+  this.methods      = {};
+  this.statics      = {};
 }).statics({
   Types: {
     Mixed: {},

@@ -9,6 +9,7 @@ module.exports = klass(function(model) {
 
   var self         = this;
   this.model       = model;
+  this.implement(this.db().schema.statics);
 
 }).methods({
 
@@ -21,6 +22,7 @@ module.exports = klass(function(model) {
   },
 
   schema: function() {
+    // console.log(this.db().schema);
     return this.db().schema.attributes;
   },
 
@@ -130,11 +132,11 @@ module.exports = klass(function(model) {
 
   create: function(record, next) {
     var self = this;
-
+ 
     record = this.new_instance(record);
 
     record.save(function(err, doc) {
-    if(next) {
+      if(next) {
         next(err, doc);
       } else {
         return doc;
