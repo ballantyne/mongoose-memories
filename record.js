@@ -110,6 +110,7 @@ module.exports = klass(function(data) {
   },
 
   update: function(document, next) {
+    var self = this;
     if (document['$set'] != undefined) {
       var toSet = _.keys(document['$set']);
       for (i = 0; i < toSet.length; i++) { 
@@ -118,7 +119,10 @@ module.exports = klass(function(data) {
     } else {
       _.extend(self, document);
     }
-    next(null, self);
+    if (next) {
+      console.log(next);
+      next(null, self);
+    }
   },
 
   updateCallbacks: function(document, next) {
